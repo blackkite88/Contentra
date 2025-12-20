@@ -4,8 +4,8 @@
 
 AI-Powered Writing & Productivity Platform
 
-![Last Commit](https://img.shields.io/github/last-commit/your-username/contentra?style=flat-square)
-![Languages](https://img.shields.io/github/languages/top/your-username/contentra?style=flat-square\&color=blue)
+![Last Commit](https://img.shields.io/github/last-commit/blackkite88/Contentra?style=flat-square)
+![Languages](https://img.shields.io/github/languages/top/blackkite88/Contentra?style=flat-square\&color=blue)
 ![License](https://img.shields.io/badge/license-ISC-blue?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-success?style=flat-square)
 
