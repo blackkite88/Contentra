@@ -1,5 +1,7 @@
 import Groq from "groq-sdk";
 import { MongoClient } from "mongodb";
+import fs from "fs";
+import pdf from "pdf-parse";
 
 /* =======================
    MongoDB (SAFE)
@@ -53,35 +55,24 @@ const generateWithGroq = async (prompt, temperature = 0.6) => {
 
 export const generateArticle = async (req, res) => {
   try {
-    const userId = getUserIdSafe(req);
-    const { topic, length = "medium" } = req.body || {};
+    const { prompt } = req.body;
 
-    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!topic) return res.status(400).json({ success: false, message: "Topic required" });
-
-    const prompt = `
-Write a ${length}-length, well-structured article on the topic below.
-Use clear headings and engaging language.
-
-Topic:
-${topic}
-`;
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        message: "Prompt is required",
+      });
+    }
 
     const content = await generateWithGroq(prompt, 0.7);
-
-    const db = await connectDB();
-    await db.collection("creations").insertOne({
-      userId,
-      prompt: topic,
-      content,
-      type: "article",
-      createdAt: new Date(),
-    });
 
     res.json({ success: true, content });
   } catch (error) {
     console.error("Article error:", error);
-    res.status(500).json({ success: false, message: "Failed to generate article" });
+    res.status(500).json({
+      success: false,
+      message: "Groq generation failed",
+    });
   }
 };
 
@@ -94,8 +85,10 @@ export const generateBlogTitle = async (req, res) => {
     const userId = getUserIdSafe(req);
     const { prompt } = req.body || {};
 
-    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!prompt) return res.status(400).json({ success: false, message: "Prompt required" });
+    if (!userId)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!prompt)
+      return res.status(400).json({ success: false, message: "Prompt required" });
 
     const content = await generateWithGroq(prompt, 0.6);
 
@@ -111,21 +104,38 @@ export const generateBlogTitle = async (req, res) => {
     res.json({ success: true, content });
   } catch (error) {
     console.error("Blog title error:", error);
-    res.status(500).json({ success: false, message: "Failed to generate blog titles" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate blog titles",
+    });
   }
 };
 
 /* =======================
-   3️⃣ Resume Reviewer
+   3️⃣ Resume Reviewer (PDF UPLOAD)
 ======================= */
 
 export const resumeReview = async (req, res) => {
   try {
     const userId = getUserIdSafe(req);
-    const { resumeText } = req.body || {};
 
-    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!resumeText) return res.status(400).json({ success: false, message: "Resume text required" });
+    if (!userId)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume PDF is required",
+      });
+    }
+
+    // Read and parse PDF
+    const buffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdf(buffer);
+    const resumeText = pdfData.text;
+
+    // Remove temp file
+    fs.unlinkSync(req.file.path);
 
     const prompt = `
 Review the following resume and provide:
@@ -151,7 +161,10 @@ ${resumeText}
     res.json({ success: true, content });
   } catch (error) {
     console.error("Resume error:", error);
-    res.status(500).json({ success: false, message: "Failed to review resume" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to review resume",
+    });
   }
 };
 
@@ -164,8 +177,10 @@ export const smartSummary = async (req, res) => {
     const userId = getUserIdSafe(req);
     const { text } = req.body || {};
 
-    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!text) return res.status(400).json({ success: false, message: "Text required" });
+    if (!userId)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!text)
+      return res.status(400).json({ success: false, message: "Text required" });
 
     const prompt = `
 Summarize the content below clearly and concisely.
@@ -189,7 +204,10 @@ ${text}
     res.json({ success: true, content });
   } catch (error) {
     console.error("Summary error:", error);
-    res.status(500).json({ success: false, message: "Failed to summarize content" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to summarize content",
+    });
   }
 };
 
@@ -202,8 +220,10 @@ export const rewriteAssistant = async (req, res) => {
     const userId = getUserIdSafe(req);
     const { text, tone = "Professional" } = req.body || {};
 
-    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!text) return res.status(400).json({ success: false, message: "Text required" });
+    if (!userId)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!text)
+      return res.status(400).json({ success: false, message: "Text required" });
 
     const prompt = `
 Rewrite the content below to improve clarity and flow.
@@ -228,6 +248,9 @@ ${text}
     res.json({ success: true, content });
   } catch (error) {
     console.error("Rewrite error:", error);
-    res.status(500).json({ success: false, message: "Failed to rewrite content" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to rewrite content",
+    });
   }
 };
