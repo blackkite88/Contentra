@@ -25,23 +25,14 @@ app.get("/", (req, res) => res.send("Server is Live!"));
 // protected routes
 app.use("/api/ai", requireAuth(), aiRouter);
 app.use("/api/user", requireAuth(), userRouter);
-
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", backend: true });
 });
 
-// start server ONLY after DB connects
-const PORT = process.env.PORT || 3000;
+// ✅ Connect to DB once, then export
+connectDB().catch((err) => {
+  console.error("MongoDB connection failed:", err);
+});
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(
-        `Server is running on port ${PORT} => http://localhost:${PORT}`
-      );
-    });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection failed:", err);
-    process.exit(1);
-  });
+// ✅ Export for Vercel (no app.listen!)
+export default app;
