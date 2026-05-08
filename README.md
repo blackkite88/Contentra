@@ -184,11 +184,6 @@ GROQ_API_KEY=gsk_xxx
 
 ---
 
-## License
-
-This project is licensed under the **ISC License**.
-
----
 
 <div align="center">
 
