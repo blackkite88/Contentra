@@ -29,10 +29,8 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", backend: true });
 });
 
-// ✅ Connect to DB once, then export
 connectDB().catch((err) => {
   console.error("MongoDB connection failed:", err);
 });
 
-// ✅ Export for Vercel (no app.listen!)
 export default app;
