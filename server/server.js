@@ -9,13 +9,7 @@ import connectDB from "./configs/db.js";
 const app = express();
 
 // middlewares
-app.use(cors({
-  origin: 'https://contentra-psi.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true  
-}));
-app.options('*', cors());
+app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
 
@@ -25,12 +19,25 @@ app.get("/", (req, res) => res.send("Server is Live!"));
 // protected routes
 app.use("/api/ai", requireAuth(), aiRouter);
 app.use("/api/user", requireAuth(), userRouter);
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", backend: true });
 });
 
-connectDB().catch((err) => {
-  console.error("MongoDB connection failed:", err);
-});
+// start server ONLY after DB connects
+const PORT = process.env.PORT || 3000;
+
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(
+        `Server is running on port ${PORT} => http://localhost:${PORT}`
+      );
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection failed:", err);
+    process.exit(1);
+  });
 
 export default app;
