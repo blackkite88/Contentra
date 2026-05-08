@@ -9,7 +9,13 @@ import connectDB from "./configs/db.js";
 const app = express();
 
 // middlewares
-app.use(cors());
+app.use(cors({
+  origin: 'https://contentra-psi.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.options('/{*path}', cors()); 
 app.use(express.json());
 app.use(clerkMiddleware());
 
